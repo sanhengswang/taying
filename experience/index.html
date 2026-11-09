@@ -1,0 +1,819 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f0eadf">
+  <meta name="description" content="温州博物馆白象塔数字叙事空间交互原型">
+  <title>塔影千相｜白象塔数字叙事空间</title>
+  <style>
+    :root {
+      --paper: #f0eadf;
+      --paper-deep: #e2d8c8;
+      --ink: #1d1b18;
+      --muted: #716b61;
+      --cinnabar: #963827;
+      --cinnabar-soft: #b45b48;
+      --bronze: #ad8a55;
+      --celadon: #5d756c;
+      --night: #171512;
+      --rule: rgba(35, 29, 23, .18);
+      --max: 1320px;
+      --font-sans: "Noto Sans SC", "Microsoft YaHei", sans-serif;
+      --font-serif: "Songti SC", "SimSun", serif;
+      --ease: cubic-bezier(.18, .72, .2, 1);
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; background: var(--paper); }
+    body {
+      margin: 0;
+      color: var(--ink);
+      background: var(--paper);
+      font-family: var(--font-sans);
+      line-height: 1.65;
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 30;
+      opacity: .08;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.5'/%3E%3C/svg%3E");
+    }
+
+    a { color: inherit; }
+    button, input { font: inherit; }
+    button, input, a { -webkit-tap-highlight-color: transparent; }
+    :focus-visible { outline: 2px solid var(--cinnabar); outline-offset: 5px; }
+
+    .progress {
+      position: fixed;
+      top: 0;
+      left: 0;
+      height: 2px;
+      width: var(--progress, 0%);
+      background: var(--cinnabar);
+      z-index: 100;
+      transition: width .12s linear;
+    }
+
+    .topline {
+      position: fixed;
+      z-index: 90;
+      inset: 18px 22px auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      pointer-events: none;
+    }
+
+    .brand,
+    .sound {
+      pointer-events: auto;
+      background: rgba(240, 234, 223, .92);
+      border: 1px solid rgba(29, 27, 24, .24);
+      color: var(--ink);
+      backdrop-filter: blur(8px);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 8px 13px;
+      text-decoration: none;
+      font-size: 12px;
+      letter-spacing: .08em;
+    }
+
+    .seal-mark {
+      width: 22px;
+      height: 22px;
+      border: 1px solid var(--cinnabar);
+      display: grid;
+      place-items: center;
+      color: var(--cinnabar);
+      font-family: var(--font-serif);
+      font-size: 13px;
+    }
+
+    .sound {
+      min-height: 40px;
+      padding: 0 14px;
+      cursor: pointer;
+    }
+
+    .side-index {
+      position: fixed;
+      z-index: 80;
+      left: 25px;
+      top: 50%;
+      transform: translateY(-50%);
+      display: grid;
+      gap: 18px;
+    }
+
+    .side-index a {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      text-decoration: none;
+      color: var(--muted);
+      font-size: 10px;
+      writing-mode: vertical-rl;
+      letter-spacing: .16em;
+      transition: color .2s;
+    }
+
+    .side-index a::before {
+      content: "";
+      width: 18px;
+      height: 1px;
+      background: currentColor;
+    }
+
+    .side-index a:hover { color: var(--cinnabar); }
+
+    .hero {
+      min-height: 100svh;
+      position: relative;
+      display: grid;
+      grid-template-columns: minmax(360px, .76fr) minmax(0, 1.24fr);
+      isolation: isolate;
+      overflow: hidden;
+      background: var(--night);
+    }
+
+    .hero-copy {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 118px clamp(28px, 5vw, 80px) 50px;
+      background: var(--paper);
+      position: relative;
+      z-index: 2;
+    }
+
+    .hero-copy::after {
+      content: "";
+      position: absolute;
+      top: 54px;
+      right: -22px;
+      width: 44px;
+      height: 44px;
+      border: 1px solid rgba(29, 27, 24, .22);
+      transform: rotate(45deg);
+      background: var(--paper);
+    }
+
+    .micro {
+      color: var(--cinnabar);
+      font-size: 11px;
+      letter-spacing: .18em;
+      text-transform: uppercase;
+    }
+
+    h1, h2, h3, p { margin-top: 0; }
+    h1 {
+      margin: auto 0;
+      font-family: var(--font-serif);
+      font-weight: 400;
+      font-size: clamp(78px, 11vw, 174px);
+      letter-spacing: -.1em;
+      line-height: .82;
+    }
+
+    .hero-deck {
+      max-width: 430px;
+      color: var(--muted);
+      font-size: 15px;
+      margin-bottom: 32px;
+    }
+
+    .enter {
+      display: inline-flex;
+      align-items: center;
+      gap: 18px;
+      width: max-content;
+      min-height: 48px;
+      color: var(--ink);
+      text-decoration: none;
+      border-bottom: 1px solid var(--ink);
+      font-weight: 600;
+    }
+
+    .enter span {
+      color: var(--cinnabar);
+      transition: transform .25s var(--ease);
+    }
+
+    .enter:hover span { transform: translateX(6px); }
+
+    .hero-image {
+      position: relative;
+      background:
+        linear-gradient(90deg, rgba(20, 18, 15, .46), transparent 38%),
+        url("../assets/visual-hero.jpg") center / cover no-repeat;
+      min-height: 100svh;
+    }
+
+    .hero-image::after {
+      content: "1104 — 1115 — 1965 — NOW";
+      position: absolute;
+      bottom: 28px;
+      right: 30px;
+      color: rgba(243, 235, 219, .68);
+      font-family: Georgia, serif;
+      font-size: 10px;
+      letter-spacing: .18em;
+    }
+
+    .chapter {
+      position: relative;
+      width: min(var(--max), calc(100% - 72px));
+      margin: 0 auto;
+      padding: 110px 0;
+      border-bottom: 1px solid var(--rule);
+    }
+
+    .chapter-grid {
+      display: grid;
+      grid-template-columns: minmax(230px, .62fr) minmax(0, 1.38fr);
+      gap: clamp(36px, 7vw, 108px);
+      align-items: start;
+    }
+
+    .chapter-copy {
+      position: sticky;
+      top: 120px;
+    }
+
+    .chapter-number {
+      font-family: Georgia, serif;
+      font-size: 12px;
+      color: var(--cinnabar);
+      letter-spacing: .16em;
+      margin-bottom: 28px;
+    }
+
+    .chapter h2 {
+      font-family: var(--font-serif);
+      font-weight: 400;
+      font-size: clamp(52px, 6vw, 92px);
+      letter-spacing: -.07em;
+      line-height: .95;
+      margin-bottom: 28px;
+    }
+
+    .chapter-copy p {
+      color: var(--muted);
+      max-width: 370px;
+    }
+
+    .stage {
+      position: relative;
+      overflow: hidden;
+      background: var(--paper-deep);
+      border: 1px solid rgba(35, 29, 23, .2);
+      min-height: 610px;
+    }
+
+    .stage::before {
+      content: attr(data-label);
+      position: absolute;
+      z-index: 3;
+      left: 18px;
+      top: 16px;
+      color: rgba(240, 234, 223, .9);
+      font-size: 10px;
+      letter-spacing: .16em;
+    }
+
+    .tower-stage {
+      background:
+        linear-gradient(180deg, rgba(19, 17, 14, .05), rgba(19, 17, 14, .7)),
+        url("../assets/visual-hero.jpg") center / cover no-repeat;
+    }
+
+    .tower-stack {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+    }
+
+    .tower-stack svg {
+      position: absolute;
+      inset: 9% 0 8%;
+      width: 100%;
+      height: 83%;
+      opacity: calc(.28 + var(--time-opacity, .15));
+      filter: drop-shadow(0 0 10px rgba(205, 171, 108, .25));
+    }
+
+    .time-control {
+      position: absolute;
+      left: 28px;
+      right: 28px;
+      bottom: 25px;
+      padding: 16px 18px;
+      background: rgba(240, 234, 223, .94);
+      border: 1px solid rgba(35, 29, 23, .3);
+      display: grid;
+      grid-template-columns: 82px 1fr 96px;
+      align-items: center;
+      gap: 16px;
+      color: var(--ink);
+      font-size: 12px;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      accent-color: var(--cinnabar);
+      cursor: ew-resize;
+    }
+
+    .artifacts-stage {
+      background: var(--paper);
+      display: grid;
+      grid-template-rows: minmax(0, 1fr) auto;
+    }
+
+    .artifact-view {
+      min-height: 430px;
+      display: grid;
+      place-items: center;
+      padding: 46px 22px 18px;
+      background:
+        radial-gradient(circle at 50% 55%, rgba(168, 132, 81, .15), transparent 52%),
+        linear-gradient(120deg, rgba(255, 255, 255, .55), transparent);
+    }
+
+    .artifact-view img {
+      max-width: 82%;
+      max-height: 390px;
+      object-fit: contain;
+      filter: drop-shadow(0 24px 25px rgba(38, 29, 20, .22));
+      transition: opacity .2s, transform .4s var(--ease);
+    }
+
+    .artifact-detail {
+      border-top: 1px solid var(--rule);
+      padding: 20px 22px 22px;
+    }
+
+    .artifact-detail h3 {
+      font-family: var(--font-serif);
+      font-size: 24px;
+      font-weight: 400;
+      margin-bottom: 4px;
+    }
+
+    .artifact-detail p {
+      color: var(--muted);
+      font-size: 12px;
+      margin-bottom: 16px;
+    }
+
+    .artifact-tabs {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .artifact-tabs button {
+      border: 1px solid var(--rule);
+      background: transparent;
+      color: var(--ink);
+      min-height: 38px;
+      padding: 0 12px;
+      cursor: pointer;
+    }
+
+    .artifact-tabs button[aria-selected="true"] {
+      background: var(--ink);
+      color: var(--paper);
+      border-color: var(--ink);
+    }
+
+    .sutra-stage {
+      background: #1d1813;
+      color: var(--paper);
+    }
+
+    .sutra-sheet {
+      position: absolute;
+      inset: 8% 7% 16%;
+      background:
+        linear-gradient(90deg, rgba(37, 26, 18, .14) 1px, transparent 1px) 0 0 / calc(100% / 9) 100%,
+        url("../assets/visual-sutra-study.jpg") center / cover;
+      box-shadow: 0 30px 60px rgba(0, 0, 0, .28);
+    }
+
+    .sutra-sheet::after {
+      content: "";
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: calc(var(--scan, 50%) - 28px);
+      width: 56px;
+      background: linear-gradient(90deg, transparent, rgba(243, 218, 169, .45), transparent);
+      mix-blend-mode: screen;
+    }
+
+    .sutra-control {
+      position: absolute;
+      left: 22px;
+      right: 22px;
+      bottom: 22px;
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      gap: 14px;
+      align-items: center;
+      color: var(--paper);
+      font-size: 11px;
+    }
+
+    .city-stage {
+      min-height: 620px;
+      background: url("../assets/visual-city-map.jpg") center / cover;
+    }
+
+    .seal-maker {
+      position: absolute;
+      right: 7%;
+      bottom: 8%;
+      width: min(360px, 84%);
+      padding: 20px;
+      background: rgba(240, 234, 223, .94);
+      border: 1px solid rgba(35, 29, 23, .35);
+    }
+
+    .seal-maker h3 {
+      font-family: var(--font-serif);
+      font-size: 24px;
+      font-weight: 400;
+      margin-bottom: 6px;
+    }
+
+    .seal-maker p {
+      color: var(--muted);
+      font-size: 11px;
+      margin-bottom: 12px;
+    }
+
+    .seal-row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 8px;
+    }
+
+    .seal-row input {
+      width: 100%;
+      min-height: 42px;
+      border: 1px solid var(--rule);
+      background: rgba(255, 255, 255, .58);
+      padding: 0 12px;
+    }
+
+    .seal-row button,
+    .download-seal {
+      min-height: 42px;
+      border: 1px solid var(--cinnabar);
+      background: var(--cinnabar);
+      color: #fff;
+      padding: 0 15px;
+      cursor: pointer;
+    }
+
+    .seal-preview {
+      margin-top: 14px;
+      width: 92px;
+      height: 92px;
+      display: grid;
+      place-items: center;
+      color: #fff;
+      background: var(--cinnabar);
+      font-family: var(--font-serif);
+      font-size: 22px;
+      writing-mode: vertical-rl;
+      letter-spacing: .12em;
+      transform: rotate(-2deg);
+      box-shadow: inset 0 0 0 4px var(--cinnabar), inset 0 0 0 6px rgba(255,255,255,.55);
+    }
+
+    .download-seal {
+      margin-top: 14px;
+      background: transparent;
+      color: var(--cinnabar);
+    }
+
+    .closing {
+      min-height: 92svh;
+      display: grid;
+      place-items: center;
+      padding: 90px 24px;
+      text-align: center;
+      background: #191612;
+      color: var(--paper);
+    }
+
+    .closing h2 {
+      font-family: var(--font-serif);
+      font-size: clamp(54px, 8vw, 118px);
+      font-weight: 400;
+      letter-spacing: -.08em;
+      line-height: .98;
+      max-width: 940px;
+      margin-bottom: 32px;
+    }
+
+    .closing p { max-width: 640px; color: #bdb3a3; margin-inline: auto; }
+    .closing .micro { color: #d1a766; margin-bottom: 26px; }
+
+    .footnote {
+      margin-top: 78px;
+      font-size: 11px;
+      color: #80776a;
+      letter-spacing: .08em;
+    }
+
+    @media (max-width: 860px) {
+      .topline { inset: 12px 12px auto; }
+      .brand { font-size: 10px; }
+      .side-index { display: none; }
+      .hero { grid-template-columns: 1fr; min-height: auto; }
+      .hero-copy { min-height: 76svh; padding: 104px 24px 36px; }
+      .hero-copy::after { display: none; }
+      .hero-image { min-height: 52svh; }
+      .hero-image::after { left: 22px; right: auto; }
+      h1 { font-size: clamp(72px, 22vw, 130px); }
+      .chapter { width: calc(100% - 32px); padding: 76px 0; }
+      .chapter-grid { grid-template-columns: 1fr; gap: 28px; }
+      .chapter-copy { position: static; }
+      .stage { min-height: 560px; }
+      .time-control { grid-template-columns: 1fr; gap: 7px; }
+      .seal-maker { left: 6%; right: 6%; width: auto; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+      *, *::before, *::after {
+        animation-duration: .01ms !important;
+        transition-duration: .01ms !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="progress" aria-hidden="true"></div>
+  <header class="topline">
+    <a class="brand" href="#top">
+      <span class="seal-mark" aria-hidden="true">塔</span>
+      <span>白象塔 · 数字叙事空间</span>
+    </a>
+    <button class="sound" id="soundToggle" type="button" aria-pressed="false">开启声景</button>
+  </header>
+
+  <nav class="side-index" aria-label="章节索引">
+    <a href="#shadow">一 · 塔影</a>
+    <a href="#faces">二 · 万象</a>
+    <a href="#sutra">三 · 经声</a>
+    <a href="#city">四 · 归城</a>
+  </nav>
+
+  <main>
+    <section class="hero" id="top">
+      <div class="hero-copy">
+        <p class="micro">WENZHOU MUSEUM · PAGODA ARCHIVE / 2026</p>
+        <div>
+          <h1>塔影<br>千相</h1>
+          <p class="hero-deck">一座北宋佛塔已经离开原址，但它留下了建筑、塑像、经卷、木作与城市记忆。进入由证据构成的空间。</p>
+          <a class="enter" href="#shadow">开始漫游 <span aria-hidden="true">→</span></a>
+        </div>
+        <p class="micro">温州博物馆 · 白象塔数字叙事空间</p>
+      </div>
+      <div class="hero-image" role="img" aria-label="温州博物馆白象塔展项现场照片的数字叠加画面"></div>
+    </section>
+
+    <section class="chapter" id="shadow">
+      <div class="chapter-grid">
+        <div class="chapter-copy">
+          <div class="chapter-number">I / 塔影</div>
+          <h2>看见消失之物</h2>
+          <p>不去伪造一座完整佛塔。用旧照片、结构线和真实残件，让观众理解一座建筑如何从城市天际线进入博物馆档案。</p>
+          <p>拖动下方时间层：线条代表证据，影像代表记忆，“现在”代表我们正在如何解释它。</p>
+        </div>
+        <div class="stage tower-stage" data-label="TIME LAYERS / 1104—2026">
+          <div class="tower-stack" id="towerStack" aria-hidden="true">
+            <svg viewBox="0 0 800 900" fill="none">
+              <g stroke="#d3ad6c" stroke-width="1.2">
+                <path d="M400 40 L400 860"/>
+                <path d="M336 790 Q400 846 464 790"/>
+                <path d="M292 730 Q400 804 508 730"/>
+                <path d="M310 660 Q400 716 490 660"/>
+                <path d="M326 590 Q400 636 474 590"/>
+                <path d="M336 520 Q400 558 464 520"/>
+                <path d="M346 450 Q400 482 454 450"/>
+                <path d="M358 385 Q400 410 442 385"/>
+                <path d="M368 325 Q400 344 432 325"/>
+                <path d="M380 260 Q400 274 420 260"/>
+                <path d="M270 755 L142 846 M530 755 L658 846"/>
+                <path d="M305 608 L190 660 M495 608 L610 660"/>
+                <path d="M337 480 L248 520 M463 480 L552 520"/>
+                <path d="M360 370 L292 385 M440 370 L508 385"/>
+              </g>
+            </svg>
+          </div>
+          <div class="time-control">
+            <label for="timeSlider">历史层</label>
+            <input id="timeSlider" type="range" min="0" max="100" value="54" aria-describedby="timeText">
+            <span id="timeText" aria-live="polite">数字叠合</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="chapter" id="faces">
+      <div class="chapter-grid">
+        <div class="chapter-copy">
+          <div class="chapter-number">II / 万象</div>
+          <h2>在面容上读时间</h2>
+          <p>四十二身北宋彩塑，不只构成宏大的佛像群。眉眼的细小起伏、衣袖的转折、颜料的剥落，都是宋代温州工匠留下的证据。</p>
+          <p>选择一件器物，查看它在空间叙事中的角色。所有影像保留残缺与修复痕迹。</p>
+        </div>
+        <div class="stage artifacts-stage" data-label="OBJECT STUDY / 04 WORKS">
+          <div class="artifact-view">
+            <img id="artifactImage" src="../assets/bxt-guanyin.png" alt="北宋彩塑观音菩萨立像">
+          </div>
+          <div class="artifact-detail">
+            <h3 id="artifactTitle">彩塑观音菩萨立像</h3>
+            <p id="artifactMeta">北宋 · 塑绘结合 · 矿物颜料</p>
+            <div class="artifact-tabs" role="tablist" aria-label="选择文物">
+              <button role="tab" aria-selected="true" data-image="bxt-guanyin.png" data-title="彩塑观音菩萨立像" data-meta="北宋 · 塑绘结合 · 矿物颜料">观音</button>
+              <button role="tab" aria-selected="false" data-image="bxt-brick-relief.jpg" data-title="砖雕佛像" data-meta="北宋 · 模印砖雕 · 线刻与塑形">砖雕</button>
+              <button role="tab" aria-selected="false" data-image="bxt-color-detail.jpg" data-title="彩塑造像衣饰细节" data-meta="矿物彩绘 · 贴金 · 衣纹">衣饰</button>
+              <button role="tab" aria-selected="false" data-image="bxt-celadon2.jpg" data-title="青瓷观音坐像" data-meta="北宋 · 青瓷 · 釉色与造像">青瓷</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="chapter" id="sutra">
+      <div class="chapter-grid">
+        <div class="chapter-copy">
+          <div class="chapter-number">III / 经声</div>
+          <h2>让一行字重新被读到</h2>
+          <p>白象塔中的佛经、木舍利塔和印刷残页把观看尺度压到纸与木的纤维。光带扫过经卷时，观众不是在“浏览信息”，而是在辨认文字如何被留下。</p>
+          <p>移动滑块展开卷面。红色只标出版式节点，不改变原文色彩。</p>
+        </div>
+        <div class="stage sutra-stage" data-label="PAPER / WOOD / TYPE">
+          <div class="sutra-sheet" id="sutraSheet"></div>
+          <div class="sutra-control">
+            <span>起</span>
+            <input id="scanSlider" type="range" min="0" max="100" value="50" aria-label="移动经文阅读光带">
+            <span>终</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="chapter" id="city">
+      <div class="chapter-grid">
+        <div class="chapter-copy">
+          <div class="chapter-number">IV / 归城</div>
+          <h2>把塔还给城市</h2>
+          <p>白象塔曾经属于寺院、水路和城市生活。离场不是回到入口，而是把刚才看见的细节制成一枚愿印，带回今天。</p>
+          <p>输入四个字，生成你的数字印记。数据不会上传。</p>
+        </div>
+        <div class="stage city-stage" data-label="CITY TRACE / LOCAL ONLY">
+          <div class="seal-maker">
+            <h3>留下一枚愿印</h3>
+            <p>可从心中选择四个字，生成后仅保存在你的设备。</p>
+            <div class="seal-row">
+              <input id="sealInput" maxlength="4" value="塔影千相" aria-label="输入四个字">
+              <button id="sealButton" type="button">生成</button>
+            </div>
+            <canvas class="seal-preview" id="sealCanvas" width="230" height="230" aria-label="生成的数字愿印"></canvas>
+            <button class="download-seal" id="downloadSeal" type="button">下载愿印</button>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="closing">
+    <div>
+      <p class="micro">EVIDENCE / SPACE / MEMORY</p>
+      <h2>塔已不在，<br>观看仍在继续。</h2>
+      <p>“塔影千相”不重建一座虚构完整的塔。它把历史影像、真实馆藏、考古证据与数字解释放在同一条路径上，让观众自己看见一座建筑如何进入记忆。</p>
+      <p class="footnote">温州博物馆白象塔数字叙事空间整体性设计 · 课程概念方案</p>
+    </div>
+  </footer>
+
+  <audio id="ambient" src="../assets/soundscape.mp3" loop preload="none"></audio>
+  <script>
+    const progress = document.querySelector('.progress');
+    const timeSlider = document.getElementById('timeSlider');
+    const timeText = document.getElementById('timeText');
+    const towerStack = document.getElementById('towerStack');
+    const scanSlider = document.getElementById('scanSlider');
+    const sutraSheet = document.getElementById('sutraSheet');
+    const soundToggle = document.getElementById('soundToggle');
+    const ambient = document.getElementById('ambient');
+
+    const updateProgress = () => {
+      const distance = document.documentElement.scrollHeight - innerHeight;
+      progress.style.setProperty('--progress', `${distance > 0 ? scrollY / distance * 100 : 0}%`);
+    };
+    addEventListener('scroll', updateProgress, { passive: true });
+    updateProgress();
+
+    const updateTime = () => {
+      const value = Number(timeSlider.value);
+      towerStack.style.setProperty('--time-opacity', (value / 100 * .9).toFixed(2));
+      timeText.textContent = value < 28 ? '历史照片' : value < 72 ? '数字叠合' : '当代解释';
+    };
+    timeSlider.addEventListener('input', updateTime);
+    updateTime();
+
+    scanSlider.addEventListener('input', () => {
+      sutraSheet.style.setProperty('--scan', `${scanSlider.value}%`);
+    });
+    sutraSheet.style.setProperty('--scan', '50%');
+
+    soundToggle.addEventListener('click', async () => {
+      if (!ambient.paused) {
+        ambient.pause();
+        soundToggle.textContent = '开启声景';
+        soundToggle.setAttribute('aria-pressed', 'false');
+        return;
+      }
+      try {
+        await ambient.play();
+        soundToggle.textContent = '关闭声景';
+        soundToggle.setAttribute('aria-pressed', 'true');
+      } catch {
+        soundToggle.textContent = '声景暂不可用';
+      }
+    });
+
+    const artifactImage = document.getElementById('artifactImage');
+    const artifactTitle = document.getElementById('artifactTitle');
+    const artifactMeta = document.getElementById('artifactMeta');
+    document.querySelectorAll('.artifact-tabs button').forEach((button) => {
+      button.addEventListener('click', () => {
+        document.querySelectorAll('.artifact-tabs button').forEach((item) => item.setAttribute('aria-selected', 'false'));
+        button.setAttribute('aria-selected', 'true');
+        artifactImage.style.opacity = '0';
+        setTimeout(() => {
+          artifactImage.src = `../assets/${button.dataset.image}`;
+          artifactImage.alt = button.dataset.title;
+          artifactTitle.textContent = button.dataset.title;
+          artifactMeta.textContent = button.dataset.meta;
+          artifactImage.style.opacity = '1';
+        }, 140);
+      });
+    });
+
+    const sealInput = document.getElementById('sealInput');
+    const sealCanvas = document.getElementById('sealCanvas');
+    const sealContext = sealCanvas.getContext('2d');
+
+    const drawSeal = () => {
+      const value = (sealInput.value.trim() || '塔影千相').slice(0, 4).padEnd(4, '印');
+      const size = sealCanvas.width;
+      sealContext.clearRect(0, 0, size, size);
+      sealContext.fillStyle = '#963827';
+      sealContext.fillRect(0, 0, size, size);
+      sealContext.strokeStyle = 'rgba(247,239,225,.82)';
+      sealContext.lineWidth = 6;
+      sealContext.strokeRect(20, 20, size - 40, size - 40);
+      sealContext.lineWidth = 2;
+      sealContext.strokeRect(31, 31, size - 62, size - 62);
+      sealContext.fillStyle = '#f7efe1';
+      sealContext.textAlign = 'center';
+      sealContext.textBaseline = 'middle';
+      sealContext.font = '600 39px "Microsoft YaHei", sans-serif';
+      sealContext.fillText(value.slice(0, 2), size / 2, size * .35);
+      sealContext.fillText(value.slice(2, 4), size / 2, size * .65);
+    };
+
+    document.getElementById('sealButton').addEventListener('click', drawSeal);
+    sealInput.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter') drawSeal();
+    });
+    document.getElementById('downloadSeal').addEventListener('click', () => {
+      const link = document.createElement('a');
+      link.download = '塔影千相-数字愿印.png';
+      link.href = sealCanvas.toDataURL('image/png');
+      link.click();
+    });
+    drawSeal();
+  </script>
+</body>
+</html>
